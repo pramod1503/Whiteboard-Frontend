@@ -54,9 +54,9 @@ export default function Whiteboard({ roomId, theme }){
     (async()=>{
       try{
         const res = await API.get(`/rooms/${roomId}`);
-        const state = res.data.whiteboardState || [];
+        const state = res.data?.whiteboardState || [];
         // convert to arrays of points (already stored as points)
-        if(mounted){
+        if(mounted && state && Array.isArray(state)){
           const loadedLines = state.map(line => line.points || []);
           setLines(loadedLines);
           setHistory([loadedLines]); 
@@ -84,17 +84,20 @@ export default function Whiteboard({ roomId, theme }){
 
     
     socket.on("load-state", (state) => {
-      const loadedLines = state.map(line => line.points || []);
-      setLines(loadedLines);
-      setHistory([loadedLines]);
-      setHistoryStep(0);
+      if (state && Array.isArray(state)) {
+        const loadedLines = state.map(line => line.points || []);
+        setLines(loadedLines);
+        setHistory([loadedLines]);
+        setHistoryStep(0);
+      }
     });
 
     // Listen for undo/redo events from other clients
     socket.on("undo-redo-receive", (state) => {
-      const loadedLines = state.map(line => line.points || []);
-      setLines(loadedLines);
-      
+      if (state && Array.isArray(state)) {
+        const loadedLines = state.map(line => line.points || []);
+        setLines(loadedLines);
+      }
     });
 
     // Listen for active users count
@@ -161,29 +164,31 @@ export default function Whiteboard({ roomId, theme }){
     setHistoryStep(prev => prev + 1);
 
     try {
-      const payload = lines.map(stroke => ({ points: stroke }));
-      // Emit the full state after a stroke is complete for other clients to sync
-      socket.emit("save-state", { roomId, whiteboardState: payload });
+      if (lines && Array.isArray(lines)) {
+        const payload = lines.map(stroke => ({ points: stroke }));
+        // Emit the full state after a stroke is complete for other clients to sync
+        socket.emit("save-state", { roomId, whiteboardState: payload });
+      }
     } catch (error) {
       console.error("Failed to save state:", error);
     }
   };
 
   const undo = () => {
-    if (historyStep > 0) {
+    if (historyStep > 0 && history && Array.isArray(history)) {
       const newHistoryStep = historyStep - 1;
       setHistoryStep(newHistoryStep);
-      setLines(history[newHistoryStep]);
-      socket.emit("undo-redo", { roomId, state: history[newHistoryStep] });
+      setLines(history[newHistoryStep] || []);
+      socket.emit("undo-redo", { roomId, state: history[newHistoryStep] || [] });
     }
   };
 
   const redo = () => {
-    if (historyStep < history.length - 1) {
+    if (history && Array.isArray(history) && historyStep < history.length - 1) {
       const newHistoryStep = historyStep + 1;
       setHistoryStep(newHistoryStep);
-      setLines(history[newHistoryStep]);
-      socket.emit("undo-redo", { roomId, state: history[newHistoryStep] });
+      setLines(history[newHistoryStep] || []);
+      socket.emit("undo-redo", { roomId, state: history[newHistoryStep] || [] });
     }
   };
 
