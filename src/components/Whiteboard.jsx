@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { API } from "../api";
 
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "https://whiteboard-backend-oryh.onrender.com";
 const socket = io(SOCKET_URL, { autoConnect: true });
 
 export default function Whiteboard({ roomId, theme }){
