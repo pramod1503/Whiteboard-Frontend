@@ -33,9 +33,14 @@ export default function RoomPage({ theme, toggleTheme }) {
   const [copied, setCopied] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
+    
+    // Check if current user is the creator
+    const creatorId = localStorage.getItem(`creator_${id}`);
+    setIsCreator(!!creatorId);
     
     (async () => {
       try {
@@ -72,12 +77,28 @@ export default function RoomPage({ theme, toggleTheme }) {
     
     setIsDeleting(true);
     try {
-      await API.delete(`/rooms/${id}`);
+      // Get creator ID from localStorage
+      const creatorId = localStorage.getItem(`creator_${id}`);
+      
+      if (!creatorId) {
+        alert('You are not the creator of this room. Only the creator can delete it.');
+        setIsDeleting(false);
+        return;
+      }
+      
+      await API.delete(`/rooms/${id}`, {
+        data: { creatorId: creatorId }
+      });
+      
       // Redirect to home page after successful deletion
       window.location.href = '/';
     } catch (error) {
       console.error('Failed to delete room:', error);
-      alert('Failed to delete room. Please try again.');
+      if (error.response?.status === 403) {
+        alert('Only the room creator can delete this room.');
+      } else {
+        alert('Failed to delete room. Please try again.');
+      }
       setIsDeleting(false);
     }
   };
@@ -269,14 +290,17 @@ export default function RoomPage({ theme, toggleTheme }) {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              onClick={handleDeleteClick}
-              variant="outline"
-              size="sm"
-              className="bg-red-500/20 dark:bg-red-500/10 backdrop-blur-md border-red-300/30 dark:border-red-500/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl group hover:bg-red-500/30 dark:hover:bg-red-500/20 touch-target"
-            >
-              <Trash2 className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform duration-300" />
-            </Button>
+            {isCreator && (
+              <Button
+                onClick={handleDeleteClick}
+                variant="outline"
+                size="sm"
+                className="bg-red-500/20 dark:bg-red-500/10 backdrop-blur-md border-red-300/30 dark:border-red-500/20 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl group hover:bg-red-500/30 dark:hover:bg-red-500/20 touch-target"
+                title="Delete Room (Creator Only)"
+              >
+                <Trash2 className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform duration-300" />
+              </Button>
+            )}
 
             <Button
               onClick={toggleTheme}

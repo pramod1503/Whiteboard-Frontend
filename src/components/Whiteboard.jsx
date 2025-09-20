@@ -112,12 +112,19 @@ export default function Whiteboard({ roomId, theme }){
       setHistoryStep(0);
     });
 
+    // Listen for room deletion by creator
+    socket.on("room-deleted", (data) => {
+      alert("This room has been deleted by the creator. You will be redirected to the home page.");
+      window.location.href = "/";
+    });
+
     return () => {
       socket.off("receive-drawing");
       socket.off("load-state");
       socket.off("undo-redo-receive");
       socket.off("active-users");
       socket.off("clear-board-receive");
+      socket.off("room-deleted");
       socket.emit("leave-room", { roomId });
     };
   }, [roomId]);

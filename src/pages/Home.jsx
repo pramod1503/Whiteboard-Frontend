@@ -84,9 +84,19 @@ export default function Home({ theme, toggleTheme }) {
     }
     setLoading(true)
     try {
-      const res = await API.post('/createRoom', { name })
+      // Generate a unique creator ID
+      const creatorId = `creator_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const res = await API.post('/createRoom', { 
+        name,
+        creatorId: creatorId
+      })
       const id = res?.data?._id || res?.data?.id
       if (!id) throw new Error('No room id returned from server')
+      
+      // Store creator ID in localStorage for this room
+      localStorage.setItem(`creator_${id}`, creatorId)
+      
       navigate(`/room/${id}`)
     } catch (err) {
       console.error('createRoom error:', err)
