@@ -44,12 +44,20 @@ export default function RoomPage({ theme, toggleTheme }) {
     
     (async () => {
       try {
+        console.log(`Attempting to fetch room with ID: ${id}`);
         const res = await API.get(`/rooms/${id}`);
+        console.log('Room data received:', res.data);
         setRoom(res.data);
         setLoading(false);
       } catch (err) {
-        console.error(err);
-        alert("Room not found or backend unreachable");
+        console.error('Error fetching room:', err);
+        if (err.response?.status === 404) {
+          alert("Room not found. The room may have been deleted or the ID is incorrect.");
+        } else if (err.response?.status >= 500) {
+          alert("Server error. Please try again later.");
+        } else {
+          alert("Failed to load room. Please check your connection and try again.");
+        }
         setLoading(false);
       }
     })();
