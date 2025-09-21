@@ -119,6 +119,7 @@ export default function Whiteboard({ roomId, theme }){
     });
 
     return () => {
+      console.log(`Whiteboard component unmounting, leaving room: ${roomId}`);
       socket.off("receive-drawing");
       socket.off("load-state");
       socket.off("undo-redo-receive");

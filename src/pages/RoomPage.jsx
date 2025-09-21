@@ -104,6 +104,10 @@ export default function RoomPage({ theme, toggleTheme }) {
       console.error('Failed to delete room:', error);
       if (error.response?.status === 403) {
         alert('Only the room creator can delete this room.');
+      } else if (error.response?.status === 404) {
+        // Room might have been automatically deleted, just redirect
+        console.log('Room already deleted, redirecting to home');
+        window.location.href = '/';
       } else {
         alert('Failed to delete room. Please try again.');
       }
