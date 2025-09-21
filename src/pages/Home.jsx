@@ -104,7 +104,10 @@ export default function Home({ theme, toggleTheme }) {
       localStorage.setItem(`creator_${id}`, creatorId)
       console.log('Room created successfully with ID:', id);
       
-      navigate(`/room/${id}`)
+      // Small delay to ensure room is fully saved before navigation
+      setTimeout(() => {
+        navigate(`/room/${id}`)
+      }, 100);
     } catch (err) {
       console.error('createRoom error:', err)
       if (err.response?.status >= 500) {
